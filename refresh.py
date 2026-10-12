@@ -240,11 +240,36 @@ def resolve_urls(token: str, file_tokens: list[str]) -> dict[str, str]:
     return resolved
 
 
+def fetch_field_names(token: str) -> set[str]:
+    """读数据表的真实列名。
+
+    必须走「列出字段」接口，不能靠记录里的 key 反推：
+    飞书会**省略值为空的字段**，所以当「上架」这一列没人勾过时，
+    每条记录的 fields 里都不会出现它 —— 反推就会得出"没有这一列"，
+    进而把所有未上架的作品当成已上架。方向正好反了。
+    """
+    url = (
+        f"https://open.feishu.cn/open-apis/bitable/v1/apps/{BASE_TOKEN}"
+        f"/tables/{TABLE_ID}/fields?page_size=200"
+    )
+    res = request_json(url, token=token)
+    if res.get("code") != 0:
+        log("警告: 读取字段列表失败，退回按记录值推断：" + json.dumps(res, ensure_ascii=False)[:200])
+        return set()
+    return {str(f.get("field_name")) for f in (res.get("data") or {}).get("items") or []}
+
+
 # ---------------------------------------------------------------- 组装输出
 
-def build(records: list[dict[str, Any]], urls: dict[str, str]) -> tuple[list[dict[str, Any]], dict[str, str], dict[str, str], int]:
+def build(records: list[dict[str, Any]], urls: dict[str, str],
+          field_names: set[str] | None = None) -> tuple[list[dict[str, Any]], dict[str, str], dict[str, str], int]:
     fields_list = [r.get("fields", {}) for r in records]
-    shelf_col = has_column(fields_list, "shelf")
+
+    # 优先信"字段接口"给的真实列名；取不到才退回按记录值推断
+    if field_names:
+        shelf_col = any(n in field_names for n in FIELD_CANDIDATES["shelf"])
+    else:
+        shelf_col = has_column(fields_list, "shelf")
     if not shelf_col:
         log("提醒: 表格里没有找到「上架」列，本次全部作品都视为上架。")
         log("      想用单条开关，请在表格里加一列勾选框，字段名写「上架」。")
@@ -364,6 +389,14 @@ def selftest() -> None:
     assert len(its2) == 1 and h2 == 0, "无「上架」列时应全部上架"
     log("  [通过] 无「上架」列时全部视为上架")
 
+    # 回归测试：飞书会省略空字段。整列都没勾时记录里看不到"上架"这个 key，
+    # 必须仍按"有这一列且未勾选"处理（全部不上架），不能误判成"没有这一列"。
+    empties = [{"record_id": "e1", "fields": {"标题": "没勾选", "样片": [{"file_token": "te1"}]}}]
+    its3, _, _, h3 = build(empties, {"te1": "https://example.invalid/e.mp4"},
+                           {"标题", "上架", "样片", "类型"})
+    assert len(its3) == 0 and h3 == 1, f"空勾选列未正确过滤：{its3} / {h3}"
+    log("  [通过] 「上架」整列都没勾时按未上架处理（不再误判为没有该列）")
+
     assert parse_shelf("否", True) is False and parse_shelf("是", True) is True
     assert parse_shelf(True, True) is True and parse_shelf(False, True) is False
     assert parse_shelf(None, True) is False
@@ -405,7 +438,10 @@ def main() -> None:
     urls = resolve_urls(token, tokens)
     log(f"解析到 {len(urls)} 个媒体链接。")
 
-    items, vmap, cmap, hidden = build(records, urls)
+    field_names = fetch_field_names(token)
+    log(f"表格共 {len(field_names)} 列。" if field_names else "列名未取到，退回按记录值推断。")
+
+    items, vmap, cmap, hidden = build(records, urls, field_names)
     save(items, vmap, cmap, hidden)
 
 
