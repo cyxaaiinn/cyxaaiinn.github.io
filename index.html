@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>[作品集] AI 影像 · 2024—2026</title>
+<style>
+  :root{
+    --paper:#f6f6f3;
+    --ink:#0a0a0a;
+    --ink-2:rgba(10,10,10,.56);
+    --ink-3:rgba(10,10,10,.34);
+    --rule:rgba(10,10,10,.13);
+    --acid:#e8f84a;
+    --blue:#0099ff;
+    --mono:ui-monospace,"IBM Plex Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:Inter,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+    --pad:clamp(18px,4vw,56px);
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:radial-gradient(rgba(10,10,10,.075) 1px,transparent 1px);
+    background-size:13px 13px;
+  }
+  body.locked{overflow:hidden}
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  a{color:inherit;text-decoration:none}
+  ::selection{background:var(--acid);color:var(--ink)}
+
+  .mono{font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+  .brk{color:var(--ink-3)}
+
+  /* ============ top bar ============ */
+  .bar{
+    position:sticky;top:0;z-index:70;
+    background:rgba(246,246,243,.82);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border-bottom:1px solid transparent;
+    transition:border-color .3s var(--ease),background .3s var(--ease);
+  }
+  .bar.solid{border-bottom-color:var(--rule)}
+  .bar-in{
+    display:flex;align-items:center;justify-content:space-between;gap:20px;
+    padding:14px var(--pad);
+  }
+  .mark{display:flex;align-items:center;gap:9px}
+  .mark i{width:8px;height:8px;background:var(--ink);flex:none;border-radius:1px}
+  .nav{display:flex;gap:5px;background:rgba(10,10,10,.05);padding:4px;border-radius:999px}
+  .nav a{
+    font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+    padding:6px 14px;border-radius:999px;color:var(--ink-2);
+    transition:all .22s var(--ease);
+  }
+  .nav a:hover{color:var(--ink);background:rgba(10,10,10,.05)}
+  .nav a.on{background:var(--ink);color:#fff}
+  .clock{display:flex;align-items:center;gap:10px;color:var(--ink-2);white-space:nowrap}
+  .clock b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+
+  /* ============ hero ============ */
+  .hero{padding:clamp(56px,11vw,132px) var(--pad) clamp(34px,6vw,64px);position:relative;z-index:1}
+  .hero-meta{display:flex;gap:22px;flex-wrap:wrap;color:var(--ink-2);margin-bottom:clamp(26px,5vw,48px)}
+  .hero h1{
+    font-size:clamp(38px,10.2vw,144px);
+    line-height:.94;letter-spacing:-.035em;font-weight:600;
+  }
+  .hero h1 .l{display:block;opacity:0;transform:translateY(.42em);
+    animation:rise .95s var(--ease) forwards}
+  .hero h1 .l:nth-child(1){animation-delay:.06s}
+  .hero h1 .l:nth-child(2){animation-delay:.16s}
+  .hero h1 .ghost{
+    -webkit-text-stroke:2.2px var(--ink);color:transparent;
+    animation-delay:.26s;
+  }
+  @keyframes rise{to{opacity:1;transform:none}}
+  .hero-foot{
+    display:flex;justify-content:space-between;align-items:flex-end;gap:30px;flex-wrap:wrap;
+    margin-top:clamp(30px,5vw,56px);
+    opacity:0;animation:rise .9s var(--ease) .42s forwards;
+  }
+  .hero-foot p{max-width:44ch;font-size:14.5px;line-height:1.62;color:var(--ink-2)}
+  .scroll-hint{display:flex;align-items:center;gap:8px;color:var(--ink-3)}
+  .scroll-hint i{display:block;width:26px;height:1px;background:var(--ink-3);animation:slide 1.9s var(--ease) infinite}
+  @keyframes slide{0%,100%{transform:translateX(0);opacity:.3}50%{transform:translateX(7px);opacity:1}}
+
+  /* ============ featured ============ */
+  .feat{padding:0 var(--pad) clamp(50px,8vw,96px);position:relative;z-index:1}
+  .feat-head{
+    display:flex;justify-content:space-between;align-items:baseline;gap:20px;
+    padding-bottom:12px;border-bottom:1px solid var(--rule);margin-bottom:22px;
+  }
+  .feat-card{
+    position:relative;border-radius:16px;overflow:hidden;cursor:pointer;
+    background:#0a0a0a;aspect-ratio:21/9;
+    transition:transform .5s var(--ease);
+  }
+  .feat-card:hover{transform:scale(.995)}
+  .feat-art{position:absolute;inset:0;transition:transform .8s var(--ease)}
+  .feat-card:hover .feat-art{transform:scale(1.035)}
+  .feat-card::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(105deg,rgba(6,6,8,.84) 0%,rgba(6,6,8,.36) 46%,rgba(6,6,8,.72) 100%);
+  }
+  .feat-body{
+    position:absolute;inset:0;z-index:2;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:clamp(20px,3.4vw,42px);color:#fff;
+  }
+  .feat-body h2{
+    font-size:clamp(24px,4.4vw,58px);font-weight:600;letter-spacing:-.025em;line-height:1.04;
+    max-width:16ch;
+  }
+  .feat-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+  .feat-tags span{
+    font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+    padding:4px 11px;border:1px solid rgba(255,255,255,.34);border-radius:999px;
+  }
+  .feat-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+  .feat-play{
+    display:flex;align-items:center;gap:10px;
+    font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;
+    background:var(--acid);color:var(--ink);
+    padding:9px 16px;border-radius:999px;
+    transition:transform .3s var(--ease);
+  }
+  .feat-card:hover .feat-play{transform:translateY(-2px)}
+
+  /* ============ index list ============ */
+  .idx{padding:0 var(--pad) clamp(60px,9vw,110px);position:relative;z-index:1}
+  .idx-head{
+    display:flex;justify-content:space-between;align-items:baseline;gap:20px;
+    padding-bottom:12px;border-bottom:1px solid var(--rule);
+  }
+  .filters{display:flex;gap:3px;flex-wrap:wrap;background:rgba(10,10,10,.05);padding:4px;border-radius:999px}
+  .filters button{
+    font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+    padding:6px 13px;border-radius:999px;color:var(--ink-2);transition:all .22s var(--ease);
+  }
+  .filters button:hover{color:var(--ink)}
+  .filters button.on{background:var(--ink);color:#fff}
+
+  .rows{margin-top:6px}
+  .row{
+    position:relative;
+    display:grid;
+    grid-template-columns:58px minmax(0,1.7fr) minmax(0,.9fr) 82px minmax(0,1fr);
+    align-items:center;gap:18px;
+    padding:20px 16px 20px 4px;
+    border-bottom:1px solid var(--rule);
+    cursor:pointer;
+    transition:opacity .55s var(--ease),transform .55s var(--ease),color .3s var(--ease);
+  }
+  /* 渐进增强：默认可见。只有 JS 成功启动（body.anim）才启用入场动画，
+     这样即使脚本报错，作品列表也不会永久隐身。 */
+  body.anim .row{opacity:0;transform:translateY(16px)}
+  body.anim .row.in{opacity:1;transform:none}
+  /* 反色块用伪元素铺，内容本身不动 —— 避免 hover 时文字左右抖动 */
+  .row::before{
+    content:"";position:absolute;inset:0 -14px;border-radius:10px;
+    background:var(--ink);opacity:0;transform:scale(.982);
+    transition:opacity .24s var(--ease),transform .3s var(--ease);
+  }
+  .row>*{position:relative;z-index:1}
+  .row:hover{color:#fff}
+  .row:hover::before{opacity:1;transform:none}
+  .row:hover .c-no,.row:hover .c-cat,.row:hover .c-dur,.row:hover .c-tool{color:rgba(255,255,255,.62)}
+  .row:hover .c-title{color:#fff}
+  .c-no{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);letter-spacing:.04em}
+  .c-title{font-size:clamp(15px,1.75vw,21px);font-weight:500;letter-spacing:-.015em;line-height:1.25}
+  .c-cat,.c-tool{font-size:12.5px;color:var(--ink-2)}
+  .c-dur{font-family:var(--mono);font-size:12px;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
+  .row:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:10px}
+
+  /* 光标跟随预览 */
+  .peek{
+    position:fixed;z-index:90;pointer-events:none;
+    width:250px;aspect-ratio:16/10;border-radius:11px;overflow:hidden;
+    opacity:0;transform:translate(-50%,-50%) scale(.88) rotate(-2.5deg);
+    transition:opacity .26s var(--ease),transform .34s var(--ease);
+    box-shadow:0 22px 52px -14px rgba(0,0,0,.55);
+    border:1px solid rgba(255,255,255,.16);
+  }
+  .peek.on{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-2.5deg)}
+  .peek-art{position:absolute;inset:0}
+  .peek-cap{
+    position:absolute;left:0;right:0;bottom:0;padding:26px 12px 10px;
+    background:linear-gradient(to top,rgba(6,6,8,.88),transparent);
+    color:#fff;font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;
+  }
+
+  .tone-amber{background:linear-gradient(140deg,#2a1608,#8a4413 56%,#e87a1e)}
+  .tone-teal{background:linear-gradient(140deg,#07201b,#155a4d 56%,#25c290)}
+  .tone-purple{background:linear-gradient(140deg,#16102a,#3d2b6b 56%,#7c58e8)}
+  .tone-rose{background:linear-gradient(140deg,#2a0d17,#75233b 56%,#d44f78)}
+  .tone-blue{background:linear-gradient(140deg,#08162a,#1b3d6b 56%,#3380dd)}
+  .tone-slate{background:linear-gradient(140deg,#111317,#333842 56%,#66707e)}
+
+  .empty{padding:56px 0;color:var(--ink-3);font-size:14px}
+
+  /* ============ about (acid block) ============ */
+  .about{
+    background:var(--acid);color:var(--ink);
+    padding:clamp(52px,8vw,104px) var(--pad);
+    position:relative;z-index:1;
+  }
+  .about-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:clamp(30px,6vw,80px)}
+  .about h2{font-size:clamp(26px,4.6vw,58px);font-weight:600;letter-spacing:-.03em;line-height:1.02}
+  .about .lead{font-size:clamp(15px,1.5vw,18px);line-height:1.6;margin-bottom:26px;max-width:46ch}
+  .svc{display:flex;flex-direction:column}
+  .svc-row{
+    display:flex;justify-content:space-between;gap:20px;
+    padding:13px 0;border-bottom:1px solid rgba(10,10,10,.22);
+    font-size:14px;
+  }
+  .svc-row span:last-child{font-family:var(--mono);font-size:11.5px;opacity:.62;text-transform:uppercase;letter-spacing:.05em}
+  .about-note{margin-top:24px;font-size:13px;line-height:1.6;opacity:.72;max-width:44ch}
+
+  /* ============ footer ============ */
+  footer{background:#0a0a0a;color:#f6f6f3;padding:clamp(52px,8vw,100px) var(--pad) 30px;position:relative;z-index:1}
+  .f-top{display:flex;justify-content:space-between;gap:34px;flex-wrap:wrap;margin-bottom:clamp(40px,7vw,76px)}
+  .f-col h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(246,246,243,.5);margin-bottom:14px;font-weight:400}
+  .f-col a,.f-col p{display:block;font-size:14.5px;line-height:1.95;color:rgba(246,246,243,.86)}
+  .f-col a:hover{color:var(--acid)}
+  .f-name{
+    font-size:clamp(46px,15.4vw,220px);line-height:.82;letter-spacing:-.045em;font-weight:600;
+    margin-bottom:26px;word-break:keep-all;
+  }
+  .f-name em{-webkit-text-stroke:1.5px rgba(246,246,243,.5);color:transparent;font-style:normal}
+  .f-base{
+    display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
+    padding-top:20px;border-top:1px solid rgba(246,246,243,.16);
+    color:rgba(246,246,243,.42);
+  }
+
+  /* ============ lightbox ============ */
+  .lb{
+    position:fixed;inset:0;z-index:200;background:rgba(6,6,8,.96);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    display:flex;align-items:center;justify-content:center;padding:5vh 4vw;
+    opacity:0;visibility:hidden;transition:opacity .3s var(--ease),visibility .3s;
+  }
+  .lb.open{opacity:1;visibility:visible}
+  .lb-stage{width:min(1180px,100%);transform:scale(.97);opacity:0;
+    transition:transform .4s var(--ease),opacity .4s var(--ease)}
+  .lb.open .lb-stage{transform:none;opacity:1}
+  .lb video{width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;border:1px solid rgba(255,255,255,.16)}
+  .lb-meta{display:flex;gap:18px;align-items:baseline;flex-wrap:wrap;margin-top:16px;color:#f6f6f3}
+  .lb-meta b{font-size:17px;font-weight:500}
+  .lb-meta span{font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:rgba(246,246,243,.5)}
+  .lb-x{
+    position:absolute;top:20px;right:22px;width:42px;height:42px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.26);color:#fff;display:grid;place-items:center;font-size:20px;
+    transition:background .22s;
+  }
+  .lb-x:hover{background:rgba(255,255,255,.13)}
+  .lb-err{margin-top:13px;padding:12px 14px;border-radius:10px;font-size:13px;
+    background:rgba(232,248,74,.1);border:1px solid rgba(232,248,74,.34);color:var(--acid);display:none}
+  .lb-err.show{display:block}
+
+  .closed{max-width:620px;margin:0 auto;padding:24vh var(--pad);text-align:center}
+  .closed h1{font-size:clamp(26px,4vw,40px);font-weight:600;letter-spacing:-.03em;margin-bottom:14px}
+  .closed p{color:var(--ink-2);font-size:14.5px}
+
+  /* ============ responsive ============ */
+  @media (max-width:1000px){
+    .about-grid{grid-template-columns:1fr;gap:34px}
+    .row{grid-template-columns:44px minmax(0,2fr) minmax(0,1fr) 68px}
+    .c-tool{display:none}
+  }
+  @media (max-width:680px){
+    .nav{display:none}
+    .hero-foot{flex-direction:column;align-items:flex-start}
+    .row{grid-template-columns:38px minmax(0,1fr) 60px;gap:12px;padding:17px 2px}
+    .c-cat{display:none}
+    .peek{display:none}
+    .feat-card{aspect-ratio:16/11}
+    .f-name{letter-spacing:-.03em}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+    body.anim .row{opacity:1;transform:none}
+    .hero h1 .l,.hero-foot{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="bar" id="bar">
+  <div class="bar-in">
+    <a class="mark" href="#top"><i></i><span class="mono">吴记影像</span></a>
+    <nav class="nav">
+      <a href="#works" class="on">作品</a>
+      <a href="#about">关于</a>
+      <a href="#reach">联系</a>
+    </nav>
+    <div class="clock mono">
+      <span>BJS<b>[CN]</b></span>
+      <b id="clock">--:--</b>
+      <span class="brk">/</span>
+      <span id="total">0 部</span>
+    </div>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="hero-meta mono">
+    <span class="brk">[</span><span>AI 影像</span><span class="brk">]</span>
+    <span class="brk">[</span><span>2024 — 2026</span><span class="brk">]</span>
+    <span class="brk">[</span><span id="catList">—</span><span class="brk">]</span>
+  </div>
+  <h1>
+    <span class="l">把每一个念头，</span>
+    <span class="l ghost">拍成一帧。</span>
+  </h1>
+  <div class="hero-foot">
+    <p>从剧本、分镜到提示词，再用生成式工具把片子做出来。下面按类别整理了近两年完成的作品，点开就能看。</p>
+    <div class="scroll-hint mono"><i></i><span>向下滚动</span></div>
+  </div>
+</section>
+
+<section class="feat" id="works">
+  <div class="feat-head">
+    <span class="mono">精选 <span class="brk">/ featured</span></span>
+    <span class="mono brk" id="featNo">[ 01 ]</span>
+  </div>
+  <article class="feat-card" id="featCard" tabindex="0" role="button" aria-label="播放精选作品">
+    <div class="feat-art tone-slate" id="featArt"></div>
+    <div class="feat-body">
+      <div>
+        <h2 id="featTitle">—</h2>
+        <div class="feat-tags" id="featTags"></div>
+      </div>
+      <div class="feat-foot">
+        <span class="mono" id="featTool" style="color:rgba(255,255,255,.6)"></span>
+        <span class="feat-play">
+          <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2v8l7-4z" fill="currentColor"/></svg>
+          播放 <span id="featDur" class="brk" style="opacity:.6"></span>
+        </span>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="idx">
+  <div class="idx-head">
+    <span class="mono">全部作品 <span class="brk">/ index</span></span>
+    <div class="filters" id="filters"></div>
+  </div>
+  <div class="rows" id="rows"></div>
+</section>
+
+<div class="peek" id="peek" aria-hidden="true">
+  <div class="peek-art" id="peekArt"></div>
+  <div class="peek-cap" id="peekCap"></div>
+</div>
+
+<section class="about" id="about">
+  <div class="about-grid">
+    <div>
+      <h2>关于</h2>
+      <p class="about-note">做 AI 短剧和影像内容，主线是粤语生活喜剧，也接品牌片和实验影像。</p>
+    </div>
+    <div>
+      <p class="lead">日常在剧本、分镜和提示词之间来回走 — 从分集概念到逐镜提示词，再到生成、剪辑、交付。喜欢把一件事从想法一直做到能播。</p>
+      <div class="svc">
+        <div class="svc-row"><span>剧本与分镜</span><span>script / storyboard</span></div>
+        <div class="svc-row"><span>生成与运镜</span><span>seedance / 即梦 / runway</span></div>
+        <div class="svc-row"><span>竖屏短剧</span><span>9:16</span></div>
+        <div class="svc-row"><span>横屏品牌片</span><span>16:9 / 21:9</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="reach">
+  <div class="f-top">
+    <div class="f-col">
+      <h3>联系</h3>
+      <a href="mailto:hello@example.com">hello@example.com</a>
+      <a href="#">微信 / WeChat</a>
+    </div>
+    <div class="f-col">
+      <h3>在别处</h3>
+      <a href="#">B 站</a>
+      <a href="#">小红书</a>
+      <a href="#">YouTube</a>
+    </div>
+    <div class="f-col">
+      <h3>状态</h3>
+      <p id="fresh">数据加载中…</p>
+      <p class="mono" style="opacity:.5">本页数据由飞书多维表格驱动</p>
+    </div>
+  </div>
+  <div class="f-name">[你的名字] <em>/ AI</em></div>
+  <div class="f-base mono">
+    <span>© 2026 保留所有权利</span>
+    <span>作品链接为临时授权，由定时任务自动续期</span>
+  </div>
+</footer>
+
+<div class="lb" id="lb" aria-hidden="true" role="dialog" aria-modal="true" aria-label="视频播放">
+  <button class="lb-x" id="lbX" aria-label="关闭">&times;</button>
+  <div class="lb-stage">
+    <video id="lbVideo" controls playsinline preload="metadata"></video>
+    <div class="lb-meta">
+      <b id="lbTitle"></b>
+      <span id="lbSub"></span>
+    </div>
+    <div class="lb-err" id="lbErr">视频暂时打不开。授权链接可能已过期，刷新一下页面就能重新获取。</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* 数据全部来自 api/portfolio.json（由定时任务从飞书表格生成）。
+     取不到时只显示"暂时没有内容"，绝不用假作品冒充真实项目。 */
+  var FALLBACK = {
+    _refreshed_at: "",
+    _site_open: true,
+    _count: 0,
+    items: []
+  };
+
+  var DATA = null, state = { filter: "全部" }, LAST = null;
+  var $ = function(id){ return document.getElementById(id); };
+  var rowsEl = $("rows"), filtersEl = $("filters");
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+  function pad(n){ return n < 10 ? "0" + n : "" + n; }
+
+  function live(){
+    return (DATA.items || []).filter(function(i){ return i && i.on_shelf !== false; })
+      .sort(function(a,b){ return (a.order||0) - (b.order||0); });
+  }
+  function cats(items){
+    var seen = {}, out = [];
+    items.forEach(function(i){ (i.categories||[]).forEach(function(c){ if(c && !seen[c]){ seen[c]=1; out.push(c); } }); });
+    return out;
+  }
+
+  /* ---- 精选 ---- */
+  function renderFeat(){
+    var it = live()[0];
+    var sec = $("works");
+    if (!it){
+      /* 一条作品都没有时，整块隐藏，别留个空壳占版面 */
+      if (sec) sec.style.display = "none";
+      return;
+    }
+    if (sec) sec.style.display = "";
+    $("featArt").className = "feat-art tone-" + (it.tone || "slate");
+    $("featTitle").textContent = it.title;
+    $("featTool").textContent = it.tools || "";
+    $("featDur").textContent = it.duration ? "[" + it.duration + "]" : "";
+    $("featNo").textContent = "[ " + pad(it.order || 1) + " ]";
+    $("featTags").innerHTML = (it.categories||[]).map(function(c){ return "<span>" + esc(c) + "</span>"; }).join("");
+    $("featCard").onclick = function(){ open(it); };
+    $("featCard").onkeydown = function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); open(it); } };
+  }
+
+  /* ---- 目录 ---- */
+  function renderFilters(list){
+    var all = ["全部"].concat(cats(list));
+    filtersEl.innerHTML = all.map(function(c){
+      return '<button data-cat="' + esc(c) + '"' + (c===state.filter?' class="on"':'') + '>' + esc(c) + "</button>";
+    }).join("");
+  }
+
+  function renderRows(){
+    var list = live();
+    var view = state.filter === "全部" ? list : list.filter(function(i){ return (i.categories||[]).indexOf(state.filter) > -1; });
+    LAST = {};
+    view.forEach(function(i){ LAST[i.record_id] = i; });
+
+    if (!view.length){
+      rowsEl.innerHTML = '<div class="empty mono">' +
+        (list.length ? "这个分类下还没有作品。" : "还没有上架的作品。") + '</div>';
+      return;
+    }
+
+    rowsEl.innerHTML = view.map(function(it, n){
+      return '' +
+      '<div class="row" data-id="' + esc(it.record_id) + '" tabindex="0" role="button" aria-label="播放 ' + esc(it.title) + '">' +
+        '<span class="c-no">[' + pad(n + 1) + ']</span>' +
+        '<span class="c-title">' + esc(it.title) + '</span>' +
+        '<span class="c-cat">' + esc((it.categories||[]).join(" · ")) + '</span>' +
+        '<span class="c-dur">' + esc(it.duration || "--:--") + '</span>' +
+        '<span class="c-tool">' + esc(it.tools || "") + '</span>' +
+      '</div>';
+    }).join("");
+    revealRows();
+  }
+
+  var rio = null;
+  function revealRows(){
+    var els = rowsEl.querySelectorAll(".row");
+    if (!("IntersectionObserver" in window)){
+      Array.prototype.forEach.call(els, function(e){ e.classList.add("in"); });
+      return;
+    }
+    if (!rio){
+      rio = new IntersectionObserver(function(es){
+        es.forEach(function(en){
+          if (en.isIntersecting){
+            var el = en.target, i = parseInt(el.dataset.i||"0",10);
+            setTimeout(function(){ el.classList.add("in"); }, Math.min(i*38, 260));
+            rio.unobserve(el);
+          }
+        });
+      }, { rootMargin:"0px 0px -6% 0px", threshold:.06 });
+    }
+    Array.prototype.forEach.call(els, function(e, i){ e.dataset.i = i; rio.observe(e); });
+  }
+
+  /* ---- 光标跟随预览 ---- */
+  var peek = $("peek"), peekArt = $("peekArt"), peekCap = $("peekCap");
+  var mx = 0, my = 0, px = 0, py = 0, raf = null, peekOn = false;
+  var fine = window.matchMedia("(hover:hover) and (min-width:681px)").matches;
+
+  function loop(){
+    px += (mx - px) * .17;
+    py += (my - py) * .17;
+    peek.style.left = px + "px";
+    peek.style.top = py + "px";
+    raf = requestAnimationFrame(loop);
+  }
+  if (fine){
+    document.addEventListener("mousemove", function(e){ mx = e.clientX; my = e.clientY; }, { passive:true });
+    rowsEl.addEventListener("mouseover", function(e){
+      var row = e.target.closest(".row");
+      if (!row) return;
+      var it = LAST[row.dataset.id];
+      if (!it) return;
+      peekArt.className = "peek-art tone-" + (it.tone || "slate");
+      peekCap.textContent = "[" + (it.duration || "--:--") + "] " + (it.tools || "");
+      peek.classList.add("on");
+      peekOn = true;
+    });
+    rowsEl.addEventListener("mouseout", function(e){
+      if (!e.relatedTarget || !e.relatedTarget.closest || !e.relatedTarget.closest(".row")){
+        peek.classList.remove("on"); peekOn = false;
+      }
+    });
+    raf = requestAnimationFrame(loop);
+  } else {
+    peek.style.display = "none";
+  }
+
+  /* ---- lightbox ---- */
+  var lb = $("lb"), lbVideo = $("lbVideo"), lbErr = $("lbErr"), lastFocus = null;
+  function open(it){
+    lastFocus = document.activeElement;
+    $("lbTitle").textContent = it.title || "";
+    $("lbSub").textContent = "[" + (it.categories||[]).join(" / ") + "] " +
+      (it.duration ? "[" + it.duration + "]" : "") + (it.tools ? " [" + it.tools + "]" : "");
+    lbErr.classList.remove("show");
+    lb.classList.add("open"); lb.setAttribute("aria-hidden","false");
+    document.body.classList.add("locked");
+    if (it.video_url){
+      lbVideo.src = it.video_url;
+      var p = lbVideo.play(); if (p && p.catch) p.catch(function(){});
+    } else { lbErr.classList.add("show"); }
+    $("lbX").focus();
+  }
+  function close(){
+    lb.classList.remove("open"); lb.setAttribute("aria-hidden","true");
+    document.body.classList.remove("locked");
+    try{ lbVideo.pause(); }catch(e){}
+    lbVideo.removeAttribute("src"); lbVideo.load();
+    lbErr.classList.remove("show");
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  lbVideo.addEventListener("error", function(){ if (lb.classList.contains("open")) lbErr.classList.add("show"); });
+  lb.addEventListener("click", function(e){ if (e.target === lb) close(); });
+  $("lbX").addEventListener("click", close);
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && lb.classList.contains("open")) close(); });
+
+  rowsEl.addEventListener("click", function(e){
+    var row = e.target.closest(".row"); if (!row) return;
+    var it = LAST[row.dataset.id]; if (it) open(it);
+  });
+  rowsEl.addEventListener("keydown", function(e){
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var row = e.target.closest(".row"); if (!row) return;
+    e.preventDefault();
+    var it = LAST[row.dataset.id]; if (it) open(it);
+  });
+  filtersEl.addEventListener("click", function(e){
+    var b = e.target.closest("button"); if (!b) return;
+    state.filter = b.dataset.cat;
+    renderFilters(live()); renderRows();
+  });
+
+  /* ---- 顶栏 / 时钟 ---- */
+  var bar = $("bar");
+  function onScroll(){ bar.classList.toggle("solid", window.scrollY > 8); }
+  window.addEventListener("scroll", onScroll, { passive:true }); onScroll();
+
+  function tick(){
+    var d = new Date();
+    $("clock").textContent = pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+  }
+  tick(); setInterval(tick, 1000);
+
+  function fmt(iso){
+    if (!iso) return "";
+    var d = new Date(iso); if (isNaN(d.getTime())) return iso;
+    return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()) +
+           " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  /* ---- 启动 ---- */
+  function boot(data){
+    DATA = data;
+    if (DATA._site_open === false){
+      document.body.innerHTML = '<div class="closed"><h1>内容更新中</h1>' +
+        '<p>作品集暂时不对外开放，稍后再来。</p></div>';
+      return;
+    }
+    var list = live();
+    /* 开启入场动画（放在渲染之前，避免闪烁）。脚本没跑到这里时，
+       列表按 CSS 默认可见，不会出现"内容永久隐身"。 */
+    document.body.classList.add("anim");
+    $("total").textContent = list.length + " 部";
+    $("catList").textContent = cats(list).length + " 个分类";
+    renderFeat(); renderFilters(list); renderRows();
+    $("fresh").textContent = DATA._refreshed_at ? "刷新于 " + fmt(DATA._refreshed_at) : "";
+  }
+
+  fetch("api/portfolio.json", { cache:"no-store" })
+    .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(boot)
+    .catch(function(){ boot(FALLBACK); });
+})();
+</script>
+</body>
+</html>
